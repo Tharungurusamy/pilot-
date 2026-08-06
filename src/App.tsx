@@ -51,15 +51,16 @@ export default function App() {
   return (
     <div style={{
       display: 'flex',
+      flexDirection: 'column',
       height: '100vh',
       overflow: 'hidden',
       background: 'var(--color-bg, #f9f9f9)',
       fontFamily: "'Inter', system-ui, sans-serif",
     }}>
-      <Sidebar active={page} onChange={setPage} collapsed={collapsed} />
+      <TopNav pageTitle={pageTitles[page] ?? 'MediWatch AI'} collapsed={collapsed} setCollapsed={setCollapsed} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <TopNav pageTitle={pageTitles[page] ?? 'MediWatch AI'} collapsed={collapsed} setCollapsed={setCollapsed} />
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <Sidebar active={page} onChange={setPage} collapsed={collapsed} />
 
         <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
           <div key={page} className="animate-fade-in" style={{ minHeight: '100%' }}>
