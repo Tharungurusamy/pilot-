@@ -29,6 +29,7 @@ const pageTitles: Record<string, string> = {
 
 export default function App() {
   const [page, setPage] = useState('dashboard')
+  const [collapsed, setCollapsed] = useState(false)
 
   const renderPage = () => {
     switch (page) {
@@ -52,13 +53,13 @@ export default function App() {
       display: 'flex',
       height: '100vh',
       overflow: 'hidden',
-      background: '#f0f4f8',
+      background: 'var(--color-bg, #f9f9f9)',
       fontFamily: "'Inter', system-ui, sans-serif",
     }}>
-      <Sidebar active={page} onChange={setPage} />
+      <Sidebar active={page} onChange={setPage} collapsed={collapsed} />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <TopNav pageTitle={pageTitles[page] ?? 'MediWatch AI'} />
+        <TopNav pageTitle={pageTitles[page] ?? 'MediWatch AI'} collapsed={collapsed} setCollapsed={setCollapsed} />
 
         <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
           <div key={page} className="animate-fade-in" style={{ minHeight: '100%' }}>

@@ -5,21 +5,21 @@
 @theme inline {
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --color-bg: #f0f4f8;
-  --color-sidebar: #0d1b2e;
-  --color-sidebar-hover: #1a2d45;
-  --color-primary: #2563eb;
-  --color-primary-light: #3b82f6;
+  --color-bg: #f9f9f9;
+  --color-sidebar: #ffffff;
+  --color-sidebar-hover: #f2f2f2;
+  --color-primary: #0f0f0f;
+  --color-primary-light: #272727;
   --color-purple: #7c3aed;
   --color-purple-light: #8b5cf6;
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   --color-card: #ffffff;
-  --color-border: #e2e8f0;
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #64748b;
-  --color-text-muted: #94a3b8;
+  --color-border: #e5e5e5;
+  --color-text-primary: #0f0f0f;
+  --color-text-secondary: #606060;
+  --color-text-muted: #909090;
 }
 
 * {
@@ -31,8 +31,8 @@ html, body, #root {
   padding: 0;
   height: 100%;
   font-family: 'Inter', system-ui, sans-serif;
-  background-color: #f0f4f8;
-  color: #0f172a;
+  background-color: #f9f9f9;
+  color: #0f0f0f;
 }
 
 /* Scrollbar styling */
