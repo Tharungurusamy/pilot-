@@ -1,38 +1,43 @@
-import { useState } from 'react'
-
 interface SidebarProps {
   active: string
   onChange: (id: string) => void
   collapsed: boolean
 }
 
+type NavItem = {
+  id: string
+  label: string
+  icon: any
+  badgeCount?: number
+}
+
 export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
   // Navigation groupings maintaining original items but styling them as sections
-  const firstSection = [
+  const firstSection: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutIcon },
     { id: 'live-monitoring', label: 'Live Monitoring', icon: ActivityIcon },
     { id: 'alerts', label: 'Alerts', icon: BellIcon, badgeCount: 3 },
   ]
 
-  const secondSection = [
+  const secondSection: NavItem[] = [
     { id: 'incidents', label: 'Incident Analysis', icon: AlertTriangleIcon },
     { id: 'ai-agents', label: 'AI Agents', icon: CpuIcon },
     { id: 'patterns', label: 'Pattern Analysis', icon: GitBranchIcon },
     { id: 'root-cause', label: 'Root Cause Analysis', icon: SearchIcon },
   ]
 
-  const thirdSection = [
+  const thirdSection: NavItem[] = [
     { id: 'resolution', label: 'Resolution Center', icon: CheckCircleIcon },
     { id: 'knowledge-base', label: 'Knowledge Base', icon: DatabaseIcon },
     { id: 'reports', label: 'Reports', icon: BarChart2Icon },
   ]
 
-  const fourthSection = [
+  const fourthSection: NavItem[] = [
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ]
 
   // Collapsed rail items (subset of most important ones)
-  const compactItems = [
+  const compactItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutIcon },
     { id: 'live-monitoring', label: 'Live', icon: ActivityIcon },
     { id: 'alerts', label: 'Alerts', icon: BellIcon, badgeCount: 3 },
@@ -41,7 +46,7 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
   ]
 
   // Common item button rendering helper
-  const renderItemButton = (item: { id: string; label: string; icon: React.ComponentType<{ size: number }> ; badgeCount?: number }) => {
+  const renderItemButton = (item: NavItem) => {
     const Icon = item.icon
     const isActive = active === item.id
 
@@ -49,54 +54,20 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
       <button
         key={item.id}
         onClick={() => onChange(item.id)}
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 22,
-          padding: '8px 12px',
-          background: isActive ? '#f2f2f2' : 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          color: '#0f0f0f',
-          fontSize: 14,
-          fontWeight: isActive ? 600 : 400,
-          transition: 'background 0.15s ease',
-          borderRadius: 10,
-          marginBottom: 2,
-          textAlign: 'left',
-        }}
-        onMouseEnter={(e) => {
-          if (!isActive) e.currentTarget.style.background = '#f9f9f9'
-        }}
-        onMouseLeave={(e) => {
-          if (!isActive) e.currentTarget.style.background = 'transparent'
-        }}
+        className={`w-full flex items-center gap-[22px] py-2 px-3 border-none cursor-pointer text-[#0f0f0f] text-sm transition-colors duration-150 rounded-[10px] mb-0.5 text-left ${
+          isActive ? 'bg-[#f2f2f2] font-semibold' : 'bg-transparent font-normal hover:bg-[#f9f9f9]'
+        }`}
       >
-        <span style={{ display: 'flex', alignItems: 'center', color: isActive ? '#0f0f0f' : '#606060' }}>
+        <span className={`flex items-center ${isActive ? 'text-[#0f0f0f]' : 'text-[#606060]'}`}>
           <Icon size={20} />
         </span>
-        <span style={{ 
-          whiteSpace: 'nowrap', 
-          overflow: 'hidden', 
-          textOverflow: 'ellipsis',
-          flex: 1
-        }}>
+        <span className="whitespace-nowrap overflow-hidden text-ellipsis flex-1">
           {item.label}
         </span>
         {item.badgeCount && (
-          <span style={{
-            background: '#0f0f0f',
-            color: '#fff',
-            fontSize: 10,
-            fontWeight: 700,
-            borderRadius: '50%',
-            width: 16,
-            height: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>{item.badgeCount}</span>
+          <span className="bg-[#0f0f0f] text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+            {item.badgeCount}
+          </span>
         )}
       </button>
     )
@@ -105,21 +76,7 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
   // Collapsed Sidebar (72px wide side-rail)
   if (collapsed) {
     return (
-      <aside
-        style={{
-          width: 72,
-          minWidth: 72,
-          background: '#ffffff',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          padding: '4px 0',
-          borderRight: '1px solid #e5e5e5',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          zIndex: 90,
-          flexShrink: 0,
-        }}
-      >
+      <aside className="w-[72px] min-w-[72px] bg-white flex flex-col items-center py-1 border-r border-[#e5e5e5] font-sans z-[90] shrink-0">
         {compactItems.map((item) => {
           const Icon = item.icon
           const isActive = active === item.id
@@ -127,51 +84,19 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
             <button
               key={item.id}
               onClick={() => onChange(item.id)}
-              style={{
-                width: 64,
-                height: 70,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                borderRadius: 10,
-                color: isActive ? '#0f0f0f' : '#0f0f0f',
-                gap: 4,
-                padding: '4px 0',
-                transition: 'background 0.2s',
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#f2f2f2'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              className={`w-16 h-[70px] flex flex-col items-center justify-center bg-transparent border-none cursor-pointer rounded-[10px] text-[#0f0f0f] gap-1 py-1 transition-colors duration-200 ${
+                isActive ? 'bg-[#f2f2f2]' : 'hover:bg-[#f2f2f2]'
+              }`}
             >
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', color: isActive ? '#0f0f0f' : '#606060' }}>
+              <div className={`relative flex items-center ${isActive ? 'text-[#0f0f0f]' : 'text-[#606060]'}`}>
                 <Icon size={22} />
                 {item.badgeCount && (
-                  <span style={{
-                    position: 'absolute',
-                    top: -4,
-                    right: -10,
-                    background: '#0f0f0f',
-                    color: '#fff',
-                    fontSize: 8,
-                    fontWeight: 700,
-                    borderRadius: '50%',
-                    width: 13,
-                    height: 13,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>{item.badgeCount}</span>
+                  <span className="absolute -top-1 -right-2.5 bg-[#0f0f0f] text-white text-[8px] font-bold rounded-full w-[13px] h-[13px] flex items-center justify-center">
+                    {item.badgeCount}
+                  </span>
                 )}
               </div>
-              <span style={{ 
-                fontSize: 10, 
-                fontWeight: isActive ? 500 : 400,
-                whiteSpace: 'nowrap',
-                color: isActive ? '#0f0f0f' : '#606060' 
-              }}>
+              <span className={`text-[10px] whitespace-nowrap ${isActive ? 'font-medium text-[#0f0f0f]' : 'font-normal text-[#606060]'}`}>
                 {item.label}
               </span>
             </button>
@@ -183,62 +108,48 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
 
   // Expanded Sidebar (240px wide side navigation scrollbar)
   return (
-    <aside
-      style={{
-        width: 240,
-        minWidth: 240,
-        background: '#ffffff',
-        display: 'flex',
-        flexDirection: 'column',
-        borderRight: '1px solid #e5e5e5',
-        overflowY: 'auto',
-        zIndex: 90,
-        padding: '12px 12px 0 12px',
-        flexShrink: 0,
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-      }}
-    >
+    <aside className="w-[240px] min-w-[240px] bg-white flex flex-col border-r border-[#e5e5e5] overflow-y-auto z-[90] pt-3 px-3 shrink-0 font-sans">
       {/* Group 1: Core pages */}
-      <div style={{ marginBottom: 12 }}>
+      <div className="mb-3">
         {firstSection.map(renderItemButton)}
       </div>
 
-      <div style={{ borderTop: '1px solid #e5e5e5', margin: '4px 0 12px 0' }} />
+      <div className="border-t border-[#e5e5e5] my-1 mb-3" />
 
       {/* Group 2: Analysis section */}
-      <div style={{ marginBottom: 12 }}>
-        <div style={{ padding: '0 12px 6px 12px', fontSize: 14, fontWeight: 700, color: '#0f0f0f' }}>Analysis</div>
+      <div className="mb-3">
+        <div className="px-3 pb-1.5 text-sm font-bold text-[#0f0f0f]">Analysis</div>
         {secondSection.map(renderItemButton)}
       </div>
 
-      <div style={{ borderTop: '1px solid #e5e5e5', margin: '4px 0 12px 0' }} />
+      <div className="border-t border-[#e5e5e5] my-1 mb-3" />
 
       {/* Group 3: Resolution & Knowledge */}
-      <div style={{ marginBottom: 12 }}>
-        <div style={{ padding: '0 12px 6px 12px', fontSize: 14, fontWeight: 700, color: '#0f0f0f' }}>Resolution</div>
+      <div className="mb-3">
+        <div className="px-3 pb-1.5 text-sm font-bold text-[#0f0f0f]">Resolution</div>
         {thirdSection.map(renderItemButton)}
       </div>
 
-      <div style={{ borderTop: '1px solid #e5e5e5', margin: '4px 0 12px 0' }} />
+      <div className="border-t border-[#e5e5e5] my-1 mb-3" />
 
       {/* Group 4: Settings */}
-      <div style={{ marginBottom: 12 }}>
+      <div className="mb-3">
         {fourthSection.map(renderItemButton)}
       </div>
 
-      <div style={{ borderTop: '1px solid #e5e5e5', margin: '4px 0 12px 0' }} />
+      <div className="border-t border-[#e5e5e5] my-1 mb-3" />
 
       {/* Sidebar Footer mimicking Youtube */}
-      <div style={{ padding: '12px 12px 24px 12px', fontSize: 11, color: '#909090', lineHeight: 1.6 }}>
-        <div style={{ marginBottom: 8, display: 'flex', flexWrap: 'wrap', gap: '4px 6px' }}>
-          <span style={{ marginRight: 8, cursor: 'pointer' }}>About</span>
-          <span style={{ marginRight: 8, cursor: 'pointer' }}>Press</span>
-          <br />
-          <span style={{ marginRight: 8, cursor: 'pointer' }}>Terms</span>
-          <span style={{ marginRight: 8, cursor: 'pointer' }}>Privacy</span>
+      <div className="pt-3 px-3 pb-6 text-[11px] text-[#909090] leading-relaxed">
+        <div className="mb-2 flex flex-wrap gap-x-1.5 gap-y-1">
+          <span className="mr-2 cursor-pointer hover:underline">About</span>
+          <span className="mr-2 cursor-pointer hover:underline">Press</span>
+          <br className="w-full" />
+          <span className="mr-2 cursor-pointer hover:underline">Terms</span>
+          <span className="mr-2 cursor-pointer hover:underline">Privacy</span>
         </div>
         <div>v2.4.1 — Hospital Intel</div>
-        <div style={{ marginTop: 6, fontWeight: 500, color: '#606060' }}>© 2026 MediWatch AI, LLC</div>
+        <div className="mt-1.5 font-medium text-[#606060]">© 2026 MediWatch AI, LLC</div>
       </div>
     </aside>
   )
