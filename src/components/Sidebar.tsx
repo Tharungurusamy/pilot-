@@ -241,7 +241,7 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
 
       {/* Sidebar Footer mimicking Youtube */}
       <div style={{ padding: '12px 12px 24px 12px', fontSize: 11, color: '#909090', lineHeight: 1.6 }}>
-        <div style={{ marginBottom: 8, display: 'flex', flexWrap: 'wrap', gap: 'x 6px' }}>
+        <div style={{ marginBottom: 8, display: 'flex', flexWrap: 'wrap', gap: '4px 6px' }}>
           <span style={{ marginRight: 8, cursor: 'pointer' }}>About</span>
           <span style={{ marginRight: 8, cursor: 'pointer' }}>Press</span>
           <br />
