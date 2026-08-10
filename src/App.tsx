@@ -26,7 +26,7 @@ const pageTitles: Record<string, string> = {
   'reports': 'Reports',
   'alerts': 'Alerts',
   'settings': 'Settings',
-  'predict': 'Predict Priority',
+  'predict': 'ML Log Analyzer',
 }
 
 export type ToastType = {

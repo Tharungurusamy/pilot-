@@ -20,7 +20,7 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
   ]
 
   const secondSection: NavItem[] = [
-    { id: 'predict', label: 'Predict Priority', icon: ActivityIcon },
+    { id: 'predict', label: 'ML Log Analyzer', icon: ActivityIcon },
     { id: 'incidents', label: 'Incident Analysis', icon: AlertTriangleIcon },
     { id: 'ai-agents', label: 'AI Agents', icon: CpuIcon },
     { id: 'patterns', label: 'Pattern Analysis', icon: GitBranchIcon },
@@ -41,7 +41,7 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
   const compactItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutIcon },
     { id: 'live-monitoring', label: 'Live', icon: ActivityIcon },
-    { id: 'predict', label: 'Predict', icon: ActivityIcon },
+    { id: 'predict', label: 'Analyzer', icon: ActivityIcon },
     { id: 'alerts', label: 'Alerts', icon: BellIcon, badgeCount: 3 },
     { id: 'incidents', label: 'Incidents', icon: AlertTriangleIcon },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
