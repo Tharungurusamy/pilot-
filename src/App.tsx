@@ -38,7 +38,7 @@ export type ToastType = {
 export default function App() {
   const [page, setPage] = useState('dashboard')
   const [collapsed, setCollapsed] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(true)
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const [toasts, setToasts] = useState<ToastType[]>([])
 
   useEffect(() => {
@@ -52,6 +52,17 @@ export default function App() {
     window.addEventListener('toast', handleToast);
     return () => window.removeEventListener('toast', handleToast);
   }, []);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const renderPage = () => {
     switch (page) {
