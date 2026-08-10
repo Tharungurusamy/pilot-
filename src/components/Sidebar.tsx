@@ -54,18 +54,20 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
       <button
         key={item.id}
         onClick={() => onChange(item.id)}
-        className={`w-full flex items-center gap-[22px] py-2 px-3 border-none cursor-pointer text-[#0f0f0f] text-sm transition-colors duration-150 rounded-[10px] mb-0.5 text-left ${
-          isActive ? 'bg-[#f2f2f2] font-semibold' : 'bg-transparent font-normal hover:bg-[#f9f9f9]'
+        className={`w-full flex items-center gap-[22px] py-2 px-3 border-none cursor-pointer text-sm transition-colors duration-150 rounded-[10px] mb-0.5 text-left ${
+          isActive 
+            ? 'bg-[#f2f2f2] dark:bg-[#272727] font-semibold text-[#0f0f0f] dark:text-white' 
+            : 'bg-transparent font-normal text-[#0f0f0f] dark:text-white hover:bg-[#f9f9f9] dark:hover:bg-[#202020]'
         }`}
       >
-        <span className={`flex items-center ${isActive ? 'text-[#0f0f0f]' : 'text-[#606060]'}`}>
+        <span className={`flex items-center ${isActive ? 'text-[#0f0f0f] dark:text-white' : 'text-[#606060] dark:text-[#a0a0a0]'}`}>
           <Icon size={20} />
         </span>
         <span className="whitespace-nowrap overflow-hidden text-ellipsis flex-1">
           {item.label}
         </span>
         {item.badgeCount && (
-          <span className="bg-[#0f0f0f] text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+          <span className="bg-[#0f0f0f] dark:bg-white text-white dark:text-[#0f0f0f] text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center transition-colors">
             {item.badgeCount}
           </span>
         )}
@@ -76,7 +78,7 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
   // Collapsed Sidebar (72px wide side-rail)
   if (collapsed) {
     return (
-      <aside className="w-[72px] min-w-[72px] bg-white flex flex-col items-center py-1 border-r border-[#e5e5e5] font-sans z-[90] shrink-0">
+      <aside className="w-[72px] min-w-[72px] bg-white dark:bg-[#0f0f0f] flex flex-col items-center py-1 border-r border-[#e5e5e5] dark:border-[#272727] font-sans z-[90] shrink-0 transition-colors duration-200">
         {compactItems.map((item) => {
           const Icon = item.icon
           const isActive = active === item.id
@@ -84,19 +86,19 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
             <button
               key={item.id}
               onClick={() => onChange(item.id)}
-              className={`w-16 h-[70px] flex flex-col items-center justify-center bg-transparent border-none cursor-pointer rounded-[10px] text-[#0f0f0f] gap-1 py-1 transition-colors duration-200 ${
-                isActive ? 'bg-[#f2f2f2]' : 'hover:bg-[#f2f2f2]'
+              className={`w-16 h-[70px] flex flex-col items-center justify-center bg-transparent border-none cursor-pointer rounded-[10px] gap-1 py-1 transition-colors duration-200 ${
+                isActive ? 'bg-[#f2f2f2] dark:bg-[#272727]' : 'hover:bg-[#f2f2f2] dark:hover:bg-[#202020]'
               }`}
             >
-              <div className={`relative flex items-center ${isActive ? 'text-[#0f0f0f]' : 'text-[#606060]'}`}>
+              <div className={`relative flex items-center ${isActive ? 'text-[#0f0f0f] dark:text-white' : 'text-[#606060] dark:text-[#a0a0a0]'}`}>
                 <Icon size={22} />
                 {item.badgeCount && (
-                  <span className="absolute -top-1 -right-2.5 bg-[#0f0f0f] text-white text-[8px] font-bold rounded-full w-[13px] h-[13px] flex items-center justify-center">
+                  <span className="absolute -top-1 -right-2.5 bg-[#0f0f0f] dark:bg-white text-white dark:text-[#0f0f0f] text-[8px] font-bold rounded-full w-[13px] h-[13px] flex items-center justify-center transition-colors">
                     {item.badgeCount}
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] whitespace-nowrap ${isActive ? 'font-medium text-[#0f0f0f]' : 'font-normal text-[#606060]'}`}>
+              <span className={`text-[10px] whitespace-nowrap ${isActive ? 'font-medium text-[#0f0f0f] dark:text-white' : 'font-normal text-[#606060] dark:text-[#a0a0a0]'}`}>
                 {item.label}
               </span>
             </button>
@@ -108,39 +110,39 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
 
   // Expanded Sidebar (240px wide side navigation scrollbar)
   return (
-    <aside className="w-[240px] min-w-[240px] bg-white flex flex-col border-r border-[#e5e5e5] overflow-y-auto z-[90] pt-3 px-3 shrink-0 font-sans">
+    <aside className="w-[240px] min-w-[240px] bg-white dark:bg-[#0f0f0f] flex flex-col border-r border-[#e5e5e5] dark:border-[#272727] overflow-y-auto z-[90] pt-3 px-3 shrink-0 font-sans transition-colors duration-200">
       {/* Group 1: Core pages */}
       <div className="mb-3">
         {firstSection.map(renderItemButton)}
       </div>
 
-      <div className="border-t border-[#e5e5e5] my-1 mb-3" />
+      <div className="border-t border-[#e5e5e5] dark:border-[#272727] my-1 mb-3 transition-colors" />
 
       {/* Group 2: Analysis section */}
       <div className="mb-3">
-        <div className="px-3 pb-1.5 text-sm font-bold text-[#0f0f0f]">Analysis</div>
+        <div className="px-3 pb-1.5 text-sm font-bold text-[#0f0f0f] dark:text-[#e0e0e0]">Analysis</div>
         {secondSection.map(renderItemButton)}
       </div>
 
-      <div className="border-t border-[#e5e5e5] my-1 mb-3" />
+      <div className="border-t border-[#e5e5e5] dark:border-[#272727] my-1 mb-3 transition-colors" />
 
       {/* Group 3: Resolution & Knowledge */}
       <div className="mb-3">
-        <div className="px-3 pb-1.5 text-sm font-bold text-[#0f0f0f]">Resolution</div>
+        <div className="px-3 pb-1.5 text-sm font-bold text-[#0f0f0f] dark:text-[#e0e0e0]">Resolution</div>
         {thirdSection.map(renderItemButton)}
       </div>
 
-      <div className="border-t border-[#e5e5e5] my-1 mb-3" />
+      <div className="border-t border-[#e5e5e5] dark:border-[#272727] my-1 mb-3 transition-colors" />
 
       {/* Group 4: Settings */}
       <div className="mb-3">
         {fourthSection.map(renderItemButton)}
       </div>
 
-      <div className="border-t border-[#e5e5e5] my-1 mb-3" />
+      <div className="border-t border-[#e5e5e5] dark:border-[#272727] my-1 mb-3 transition-colors" />
 
       {/* Sidebar Footer mimicking Youtube */}
-      <div className="pt-3 px-3 pb-6 text-[11px] text-[#909090] leading-relaxed">
+      <div className="pt-3 px-3 pb-6 text-[11px] text-[#909090] dark:text-[#707070] leading-relaxed">
         <div className="mb-2 flex flex-wrap gap-x-1.5 gap-y-1">
           <span className="mr-2 cursor-pointer hover:underline">About</span>
           <span className="mr-2 cursor-pointer hover:underline">Press</span>
@@ -149,7 +151,7 @@ export default function Sidebar({ active, onChange, collapsed }: SidebarProps) {
           <span className="mr-2 cursor-pointer hover:underline">Privacy</span>
         </div>
         <div>v2.4.1 — Hospital Intel</div>
-        <div className="mt-1.5 font-medium text-[#606060]">© 2026 MediWatch AI, LLC</div>
+        <div className="mt-1.5 font-medium text-[#606060] dark:text-[#888888]">© 2026 MediWatch AI, LLC</div>
       </div>
     </aside>
   )
