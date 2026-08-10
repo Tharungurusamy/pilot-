@@ -10,6 +10,18 @@ interface PredictionLine {
   priority: string;
   root_cause: string;
   fix: string;
+  similar_incidents?: Array<{
+    id: number;
+    timestamp: string;
+    level: string;
+    department: string;
+    content: string;
+    category: string;
+    priority: string;
+    root_cause: string;
+    fix: string;
+    similarity: string;
+  }>;
 }
 
 export default function MLPredictView() {
@@ -556,6 +568,32 @@ export default function MLPredictView() {
                 </div>
               </div>
 
+              {selectedLog.similar_incidents && selectedLog.similar_incidents.length > 0 && (
+                <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
+                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    RAG Similar Incidents
+                  </h4>
+                  <div className="flex flex-col gap-2 max-h-[180px] overflow-y-auto pr-1 scrollbar-thin">
+                    {selectedLog.similar_incidents.slice(0, 3).map((inc) => (
+                      <div key={inc.id} className="bg-[#0a0d14] p-2.5 rounded border border-slate-850 flex flex-col gap-1.5">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="font-bold text-emerald-400 font-mono">{inc.similarity} Match</span>
+                          <span className="text-slate-500 font-mono text-[9px]">{inc.department} • {inc.category}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-350 italic font-mono leading-relaxed line-clamp-2">
+                          "{inc.content}"
+                        </p>
+                        <div className="text-[10px] bg-slate-900/60 p-1.5 rounded text-slate-400">
+                          <span className="font-semibold block text-slate-300">Resolution History:</span>
+                          {inc.fix}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="border-t border-slate-800 pt-4 flex flex-col gap-2">
                 <button 
                   onClick={() => triggerSimulatedTicket(selectedLog)}
@@ -605,6 +643,26 @@ export default function MLPredictView() {
                   </p>
                 </div>
               </div>
+
+              {singleResult.similar_incidents && singleResult.similar_incidents.length > 0 && (
+                <div className="flex flex-col gap-2 border-t border-slate-850 pt-3">
+                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    RAG Reference matches
+                  </h4>
+                  <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto pr-1 scrollbar-thin">
+                    {singleResult.similar_incidents.slice(0, 3).map((inc) => (
+                      <div key={inc.id} className="bg-[#0a0d14] p-2 rounded border border-slate-850 flex flex-col gap-1">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="font-bold text-emerald-400 font-mono">{inc.similarity} Match</span>
+                          <span className="text-slate-500 font-mono text-[9px]">{inc.category}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 italic line-clamp-1">"{inc.content}"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-col gap-2 mt-2">
                 <button 

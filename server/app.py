@@ -10,6 +10,8 @@ import datetime
 import scipy.sparse as sp
 from scipy.sparse import hstack
 from fastapi.middleware.cors import CORSMiddleware
+import sqlite3
+from sklearn.metrics.pairwise import cosine_similarity
 
 app = FastAPI(title="HospitalLM ML Analytics API")
 
@@ -58,7 +60,9 @@ def load_models():
         models["tfidf_prio"] = joblib.load(os.path.join(MODELS_DIR, "priority_tfidf.joblib"))
         models["priority_encoder"] = joblib.load(os.path.join(MODELS_DIR, "priority_encoder.joblib"))
         
-        print("All models loaded successfully.")
+        # Initialize DB
+        init_db()
+        print("All models and RAG database loaded successfully.")
     except Exception as e:
         print(f"Error loading models: {e}")
 
@@ -93,6 +97,131 @@ ROOT_CAUSE_MAP = {
         "fix": "No corrective Action needed."
     }
 }
+
+DB_PATH = os.path.join(BASE_DIR, "incident_records.db")
+
+def init_db():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS incidents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                level TEXT,
+                department TEXT,
+                content TEXT,
+                category TEXT,
+                priority TEXT,
+                root_cause TEXT,
+                fix TEXT
+            )
+        """)
+        conn.commit()
+        
+        cursor.execute("SELECT COUNT(*) FROM incidents")
+        count = cursor.fetchone()[0]
+        if count == 0:
+            csv_path = os.path.join(BASE_DIR, "..", "scratch", "HospitalLM", "hospital_logs.csv")
+            if os.path.exists(csv_path):
+                import csv
+                with open(csv_path, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    to_insert = []
+                    for row in reader:
+                        content = row.get("content", "")
+                        dept = "Pharmacy"
+                        if "PACS" in content.upper() or "LAB" in content.upper() or "RESULT" in content.upper():
+                            dept = "Lab"
+                        elif "LOGIN" in content.upper() or "AUTHENTICATE" in content.upper() or "CREDENTIAL" in content.upper():
+                            dept = "EMR Login"
+                        
+                        to_insert.append((
+                            datetime.datetime.now().strftime("%H:%M:%S"),
+                            "ERROR" if "error" in content.lower() or "fail" in content.lower() else "INFO",
+                            dept,
+                            content,
+                            row.get("category", "unknown"),
+                            "P2",
+                            row.get("root_cause", ""),
+                            row.get("fix", "")
+                        ))
+                    cursor.executemany("""
+                        INSERT INTO incidents (timestamp, level, department, content, category, priority, root_cause, fix)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, to_insert)
+                    conn.commit()
+        conn.close()
+    except Exception as e:
+        print("Error initializing SQLite database:", e)
+
+def save_incident_to_db(level: str, department: str, content: str, category: str, priority: str, root_cause: str, fix: str):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO incidents (timestamp, level, department, content, category, priority, root_cause, fix)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            datetime.datetime.now().strftime("%H:%M:%S"),
+            level,
+            department,
+            content,
+            category,
+            priority,
+            root_cause,
+            fix
+        ))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("Error saving log to SQLite DB:", e)
+
+def semantic_rag_search(query_content: str, k: int = 3):
+    if not models.get("tfidf_cat") or not os.path.exists(DB_PATH):
+        return []
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, timestamp, level, department, content, category, priority, root_cause, fix FROM incidents")
+        rows = cursor.fetchall()
+        conn.close()
+        
+        if not rows:
+            return []
+            
+        contents = [row[4] for row in rows]
+        
+        tfidf = models["tfidf_cat"]
+        history_vectors = tfidf.transform(contents)
+        query_vector = tfidf.transform([query_content])
+        
+        similarities = cosine_similarity(query_vector, history_vectors)[0]
+        
+        # Sort similarity indices in descending order
+        top_indices = np.argsort(similarities)[::-1][:k]
+        
+        results = []
+        for idx in top_indices:
+            sim = float(similarities[idx])
+            # Only return matches with standard similarity
+            row = rows[idx]
+            results.append({
+                "id": row[0],
+                "timestamp": row[1],
+                "level": row[2],
+                "department": row[3],
+                "content": row[4],
+                "category": row[5],
+                "priority": row[6],
+                "root_cause": row[7],
+                "fix": row[8],
+                "similarity": f"{int(sim * 100)}%"
+            })
+        return results
+    except Exception as e:
+        print("Error execution semantic RAG search:", e)
+        return []
 
 def get_root_cause_and_fix(category: str):
     cat_lower = category.lower()
@@ -220,6 +349,21 @@ def predict_single(request: SinglePredictionRequest):
         raise HTTPException(status_code=500, detail="Models are not loaded on server.")
     try:
         res = run_ml_pipeline(request.content, request.level, request.department)
+        
+        # RAG Local Cosine Similarity Search
+        rag_matches = semantic_rag_search(request.content)
+        
+        # Save to SQLite Database
+        save_incident_to_db(
+            level=request.level,
+            department=request.department,
+            content=request.content,
+            category=res["category"],
+            priority=res["priority"],
+            root_cause=res["root_cause"],
+            fix=res["fix"]
+        )
+        
         return {
             "content": request.content,
             "level": request.level,
@@ -227,7 +371,8 @@ def predict_single(request: SinglePredictionRequest):
             "category": res["category"],
             "priority": res["priority"],
             "root_cause": res["root_cause"],
-            "fix": res["fix"]
+            "fix": res["fix"],
+            "similar_incidents": rag_matches
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -241,6 +386,16 @@ def predict_batch(request: BatchPredictionRequest):
     for idx, entry in enumerate(request.logs):
         try:
             res = run_ml_pipeline(entry.content, entry.level, entry.department)
+            rag_matches = semantic_rag_search(entry.content)
+            save_incident_to_db(
+                level=entry.level,
+                department=entry.department,
+                content=entry.content,
+                category=res["category"],
+                priority=res["priority"],
+                root_cause=res["root_cause"],
+                fix=res["fix"]
+            )
             results.append({
                 "timestamp": entry.timestamp or datetime.datetime.now().strftime("%H:%M:%S"),
                 "level": entry.level,
@@ -250,10 +405,10 @@ def predict_batch(request: BatchPredictionRequest):
                 "category": res["category"],
                 "priority": res["priority"],
                 "root_cause": res["root_cause"],
-                "fix": res["fix"]
+                "fix": res["fix"],
+                "similar_incidents": rag_matches
             })
         except Exception as e:
-            # Append error placeholders so the whole batch doesn't fail
             results.append({
                 "timestamp": entry.timestamp or datetime.datetime.now().strftime("%H:%M:%S"),
                 "level": entry.level,
@@ -263,7 +418,8 @@ def predict_batch(request: BatchPredictionRequest):
                 "category": "error",
                 "priority": "P4",
                 "root_cause": f"Prediction failed: {str(e)}",
-                "fix": "Verify features syntax."
+                "fix": "Verify features syntax.",
+                "similar_incidents": []
             })
     return results
 
@@ -339,6 +495,16 @@ def predict_raw_text(request: RawLogsRequest):
             
             try:
                 res = run_ml_pipeline(content, level, department)
+                rag_matches = semantic_rag_search(content)
+                save_incident_to_db(
+                    level=level,
+                    department=department,
+                    content=content,
+                    category=res["category"],
+                    priority=res["priority"],
+                    root_cause=res["root_cause"],
+                    fix=res["fix"]
+                )
                 results.append({
                     "timestamp": timestamp,
                     "level": level,
@@ -348,7 +514,8 @@ def predict_raw_text(request: RawLogsRequest):
                     "category": res["category"],
                     "priority": res["priority"],
                     "root_cause": res["root_cause"],
-                    "fix": res["fix"]
+                    "fix": res["fix"],
+                    "similar_incidents": rag_matches
                 })
             except Exception as e:
                 results.append({
@@ -360,7 +527,8 @@ def predict_raw_text(request: RawLogsRequest):
                     "category": "error",
                     "priority": "P4",
                     "root_cause": f"Prediction failed: {str(e)}",
-                    "fix": "Verify details."
+                    "fix": "Verify details.",
+                    "similar_incidents": []
                 })
     else:
         # Fall back to line-by-line parsing
@@ -375,6 +543,16 @@ def predict_raw_text(request: RawLogsRequest):
                 
             try:
                 res = run_ml_pipeline(parsed["content"], parsed["level"], parsed["department"])
+                rag_matches = semantic_rag_search(parsed["content"])
+                save_incident_to_db(
+                    level=parsed["level"],
+                    department=parsed["department"],
+                    content=parsed["content"],
+                    category=res["category"],
+                    priority=res["priority"],
+                    root_cause=res["root_cause"],
+                    fix=res["fix"]
+                )
                 results.append({
                     "timestamp": parsed["timestamp"],
                     "level": parsed["level"],
@@ -384,7 +562,8 @@ def predict_raw_text(request: RawLogsRequest):
                     "category": res["category"],
                     "priority": res["priority"],
                     "root_cause": res["root_cause"],
-                    "fix": res["fix"]
+                    "fix": res["fix"],
+                    "similar_incidents": rag_matches
                 })
             except Exception as e:
                 results.append({
@@ -396,7 +575,8 @@ def predict_raw_text(request: RawLogsRequest):
                     "category": "error",
                     "priority": "P4",
                     "root_cause": f"Prediction failed: {str(e)}",
-                    "fix": "Verify details."
+                    "fix": "Verify details.",
+                    "similar_incidents": []
                 })
                 
     return results
