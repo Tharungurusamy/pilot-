@@ -312,6 +312,10 @@ def run_ml_pipeline(content: str, level: str, department: str):
     pred_prio_encoded = models["priority_model"].predict(x_prio_combined)
     priority_label = pred_prio_encoded[0]
 
+    # Override priority to low/normal (P4) if predicted category is normal
+    if category_label == "normal":
+        priority_label = "P4"
+
     # Look up Root Cause & Fix
     rc_fix = get_root_cause_and_fix(category_label)
 
