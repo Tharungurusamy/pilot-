@@ -12,6 +12,49 @@ from scipy.sparse import hstack
 from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
 from sklearn.metrics.pairwise import cosine_similarity
+import urllib.request
+import json
+import threading
+
+def trigger_webhook_async(incidents_list):
+    def send_post():
+        log_file = os.path.join(BASE_DIR, "webhook.log")
+        try:
+            url = "https://api.agents.snsihub.ai/webhook-test/incident"
+            payload = {
+                "events": [
+                    {
+                        "timestamp": inc.get("timestamp") or datetime.datetime.now().strftime("%H:%M:%S"),
+                        "level": inc.get("level"),
+                        "department": inc.get("department"),
+                        "content": inc.get("content"),
+                        "traceId": inc.get("traceId") or "TRC-NEW",
+                        "category": inc.get("category"),
+                        "priority": inc.get("priority"),
+                        "root_cause": inc.get("root_cause"),
+                        "fix": inc.get("fix")
+                    } for inc in incidents_list
+                ]
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode('utf-8'),
+                headers={'Content-Type': 'application/json', 'User-Agent': 'MediWatch-AI-Webhook-Client'}
+            )
+            with urllib.request.urlopen(req, timeout=5) as response:
+                status_code = response.getcode()
+                msg = f"[{datetime.datetime.now().isoformat()}] Webhook post success. Code: {status_code}\n"
+                with open(log_file, "a") as f:
+                    f.write(msg)
+                print(msg.strip(), flush=True)
+        except Exception as e:
+            msg = f"[{datetime.datetime.now().isoformat()}] Webhook post failed: {e}\n"
+            with open(log_file, "a") as f:
+                f.write(msg)
+            print(msg.strip(), flush=True)
+
+    t = threading.Thread(target=send_post, daemon=True)
+    t.start()
 
 app = FastAPI(title="HospitalLM ML Analytics API")
 
@@ -364,7 +407,7 @@ def predict_single(request: SinglePredictionRequest):
             fix=res["fix"]
         )
         
-        return {
+        result_payload = {
             "content": request.content,
             "level": request.level,
             "department": request.department,
@@ -374,6 +417,11 @@ def predict_single(request: SinglePredictionRequest):
             "fix": res["fix"],
             "similar_incidents": rag_matches
         }
+        
+        # Trigger Remote Webhook
+        trigger_webhook_async([result_payload])
+        
+        return result_payload
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -421,6 +469,7 @@ def predict_batch(request: BatchPredictionRequest):
                 "fix": "Verify features syntax.",
                 "similar_incidents": []
             })
+    trigger_webhook_async(results)
     return results
 
 @app.post("/predict-raw")
@@ -578,7 +627,8 @@ def predict_raw_text(request: RawLogsRequest):
                     "fix": "Verify details.",
                     "similar_incidents": []
                 })
-                
+    
+    trigger_webhook_async(results)
     return results
 
 if __name__ == "__main__":
