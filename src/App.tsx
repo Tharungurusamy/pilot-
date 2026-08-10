@@ -12,6 +12,7 @@ import KnowledgeBase from './views/KnowledgeBase'
 import Reports from './views/Reports'
 import Alerts from './views/Alerts'
 import Settings from './views/Settings'
+import MLPredictView from './views/MLPredictView'
 
 const pageTitles: Record<string, string> = {
   'dashboard': 'Dashboard',
@@ -25,6 +26,7 @@ const pageTitles: Record<string, string> = {
   'reports': 'Reports',
   'alerts': 'Alerts',
   'settings': 'Settings',
+  'predict': 'Predict Priority',
 }
 
 export type ToastType = {
@@ -64,6 +66,7 @@ export default function App() {
       case 'reports': return <Reports />
       case 'alerts': return <Alerts />
       case 'settings': return <Settings />
+      case 'predict': return <MLPredictView />
       default: return <Dashboard />
     }
   }
